@@ -1,0 +1,22 @@
+# APPNICENAME=JDownloader2
+# APPDESCRIPTION=Free, open-source download management tool
+services:
+  jdownloader2:
+    container_name: jdownloader2
+    hostname: ${DOCKERHOSTNAME}
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    environment:
+      - GROUP_ID=${PGID}
+      - USER_ID=${PUID}
+      - TZ=${TZ}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKERCONFDIR}/jdownloader2:/config
+      - ${DOCKERSHAREDDIR}:/shared
+      - ${DOWNLOADSDIR}:/downloads
+      - ${DOWNLOADSDIR}:/output

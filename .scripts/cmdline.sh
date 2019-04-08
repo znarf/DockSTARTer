@@ -32,18 +32,18 @@ cmdline() {
     #Reset the positional parameters to the short options
     eval set -- "${LOCAL_ARGS:-}"
 
-    while getopts ":b:c:eghipt:uvx" OPTION; do
+    while getopts ":b:c:eghipt:u:vx" OPTION; do
         case ${OPTION} in
             b)
                 case ${OPTARG} in
                     min)
-                        run_script "backup_min"
+                        run_script 'backup_min'
                         ;;
                     med)
-                        run_script "backup_med"
+                        run_script 'backup_med'
                         ;;
                     max)
-                        run_script "backup_max"
+                        run_script 'backup_max'
                         ;;
                     *)
                         fatal "Invalid backup option."
@@ -98,7 +98,7 @@ cmdline() {
                 exit
                 ;;
             u)
-                run_script 'update_self'
+                run_script 'update_self' "${OPTARG}"
                 exit
                 ;;
             v)
@@ -114,6 +114,9 @@ cmdline() {
                         run_script 'generate_yml'
                         run_script 'run_compose'
                         ;;
+                    u)
+                        run_script 'update_self'
+                        ;;
                     *)
                         fatal "${OPTARG} requires an option."
                         ;;
@@ -127,4 +130,9 @@ cmdline() {
         esac
     done
     return 0
+}
+
+test_cmdline() {
+    # run_script 'cmdline'
+    warning "Travis does not test cmdline."
 }

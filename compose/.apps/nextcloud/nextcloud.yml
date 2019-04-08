@@ -1,10 +1,15 @@
-#/APPNICENAME=Nextcloud
-#/APPDESCRIPTION=Gives you access to all your files wherever you are
+# APPNICENAME=Nextcloud
+# APPDESCRIPTION=Gives you access to all your files wherever you are
 services:
   nextcloud:
-    image: linuxserver/nextcloud
     container_name: nextcloud
+    hostname: ${DOCKERHOSTNAME}
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - PGID=${PGID}
       - PUID=${PUID}

@@ -1,10 +1,15 @@
-#/APPNICENAME=Telegraf
-#/APPDESCRIPTION=Agent for collecting metrics and writing them to InfluxDB or other outputs
+# APPNICENAME=Telegraf
+# APPDESCRIPTION=Agent for collecting metrics and writing them to InfluxDB or other outputs
 services:
   telegraf:
-    image: telegraf
     container_name: telegraf
+    hostname: ${DOCKERHOSTNAME}
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - HOST_PROC=/host/proc
       - TZ=${TZ}

@@ -1,10 +1,15 @@
-#/APPNICENAME=pyLoad
-#/APPDESCRIPTION=Python Download Manager alternative to JDownloader
+# APPNICENAME=pyLoad
+# APPDESCRIPTION=Python Download Manager alternative to JDownloader
 services:
   pyload:
     container_name: pyload
-    image: writl/pyload:latest
+    hostname: ${DOCKERHOSTNAME}
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - PGID=${PGID}
       - PUID=${PUID}
@@ -14,3 +19,4 @@ services:
       - ${DOCKERCONFDIR}/pyload:/opt/pyload/pyload-config
       - ${DOCKERSHAREDDIR}:/shared
       - ${DOWNLOADSDIR}:/opt/pyload/Downloads
+      - ${DOWNLOADSDIR}:/downloads

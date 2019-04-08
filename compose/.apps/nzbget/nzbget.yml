@@ -1,10 +1,15 @@
-#/APPNICENAME=NZBGet
-#/APPDESCRIPTION=NZB Newsgrabber / Downloader
+# APPNICENAME=NZBGet
+# APPDESCRIPTION=NZB Newsgrabber / Downloader
 services:
   nzbget:
-    image: linuxserver/nzbget
     container_name: nzbget
+    hostname: ${DOCKERHOSTNAME}
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - PGID=${PGID}
       - PUID=${PUID}

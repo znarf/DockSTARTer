@@ -1,10 +1,15 @@
-#/APPNICENAME=PlexRequests
-#/APPDESCRIPTION=Automated way for users to request new content for Plex
+# APPNICENAME=PlexRequests
+# APPDESCRIPTION=Automated way for users to request new content for Plex
 services:
   plexrequests:
-    image: linuxserver/plexrequests
     container_name: plexrequests
+    hostname: ${DOCKERHOSTNAME}
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - URL_BASE=/plexrequests
       - PGID=${PGID}

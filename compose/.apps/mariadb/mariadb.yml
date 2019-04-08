@@ -1,10 +1,15 @@
-#/APPNICENAME=MariaDB
-#/APPDESCRIPTION=One of the most popular database servers
+# APPNICENAME=MariaDB
+# APPDESCRIPTION=One of the most popular database servers
 services:
   mariadb:
-    image: linuxserver/mariadb
     container_name: mariadb
+    hostname: ${DOCKERHOSTNAME}
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - MYSQL_ROOT_PASSWORD=${MARIADB_MYSQL_ROOT_PASSWORD}
       - PGID=${PGID}

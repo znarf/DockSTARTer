@@ -15,7 +15,7 @@ backup_create() {
     local BACKUP_RETENTION
     BACKUP_RETENTION=$(run_script 'env_get' BACKUP_RETENTION)
     local BACKUP_RETENTION_MAX
-    BACKUP_RETENTION_MAX="${BACKUP_RETENTION/ */}"
+    BACKUP_RETENTION_MAX="${BACKUP_RETENTION%% *}"
     local PUID
     PUID=$(run_script 'env_get' PUID)
     local PGID
@@ -197,7 +197,8 @@ backup_create() {
 
         i=$(($(tail -100 "${LOG}" | grep 'Total transferred file size:' | cut -d " " -f5 | sed -e 's/\,//g') / 1048576))
         info "${i} MiB needed."
-        rm -rf "${LOG}" "${SNAPSHOT_DST}/${SNAPSHOT_NAME}.test-free-disk-space" || fatal "Failed to remove ${SNAPSHOT_DST}/${SNAPSHOT_NAME}.test-free-disk-space"
+        rm -rf "${SNAPSHOT_DST}/${SNAPSHOT_NAME}.test-free-disk-space" || fatal "Failed to remove ${SNAPSHOT_DST}/${SNAPSHOT_NAME}.test-free-disk-space"
+        rm -rf "${LOG}" || warning "Temporary backup log file could not be removed."
         remove_snapshot $((MIN_MIBSIZE + i)) $((MAX_MIBSIZE - i))
         if [ "${OOVERWRITE_LAST}" == "${OVERWRITE_LAST}" ]; then # no need to retry
             break
@@ -274,4 +275,9 @@ backup_create() {
     remove_snapshot "${MIN_MIBSIZE}" "${MAX_MIBSIZE}"
     run_script 'set_permissions' "${SNAPSHOT_DST}" "${PUID}" "${PGID}"
     info "Snapshot backup successfully done in $(($(date +%s) - STARTDATE)) sec."
+}
+
+test_backup_create() {
+    run_script 'env_update'
+    run_script 'backup_create' ".compose.backups"
 }

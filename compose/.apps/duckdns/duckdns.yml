@@ -1,10 +1,15 @@
-#/APPNICENAME=DuckDNS
-#/APPDESCRIPTION=Free service which will point a DNS to an IP of your choice
+# APPNICENAME=DuckDNS
+# APPDESCRIPTION=Free service which will point a DNS to an IP of your choice
 services:
   duckdns:
-    image: linuxserver/duckdns
     container_name: duckdns
+    hostname: ${DOCKERHOSTNAME}
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - LOG_FILE=${DUCKDNS_LOG_FILE}
       - SUBDOMAINS=${DUCKDNS_SUBDOMAINS}

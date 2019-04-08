@@ -1,10 +1,15 @@
-#/APPNICENAME=DDClient
-#/APPDESCRIPTION=Update dynamic DNS entries
+# APPNICENAME=DDClient
+# APPDESCRIPTION=Update dynamic DNS entries
 services:
   ddclient:
-    image: linuxserver/ddclient
     container_name: ddclient
+    hostname: ${DOCKERHOSTNAME}
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - PGID=${PGID}
       - PUID=${PUID}

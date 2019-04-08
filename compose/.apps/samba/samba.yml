@@ -1,8 +1,7 @@
-#/APPNICENAME=Samba
-#/APPDESCRIPTION=Access media directories and Docker config over Samba
+# APPNICENAME=Samba
+# APPDESCRIPTION=Access media directories and Docker config over Samba
 services:
   samba:
-    image: dperson/samba
     container_name: samba
     command:
       - -u "${SAMBA_USERNAME};${SAMBA_PASSWORD}" \
@@ -13,7 +12,13 @@ services:
         -s "Movies;/data/movies;yes;no;no;${SAMBA_USERNAME}" \
         -s "Music;/data/music;yes;no;no;${SAMBA_USERNAME}" \
         -s "TV;/data/tv;yes;no;no;${SAMBA_USERNAME}"
+    hostname: ${DOCKERHOSTNAME}
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - GROUPID=${PGID}
       - TZ=${TZ}
@@ -21,9 +26,16 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKERCONFDIR}:/data/docker/config
+      - ${DOCKERSHAREDDIR}:/shared
       - ${DOWNLOADSDIR}:/data/downloads
-      - ${MEDIADIR_COMICS}:/data/comics
+      - ${DOWNLOADSDIR}:/downloads
+      - ${MEDIADIR_BOOKS}:/books
       - ${MEDIADIR_BOOKS}:/data/books
+      - ${MEDIADIR_COMICS}:/comics
+      - ${MEDIADIR_COMICS}:/data/comics
       - ${MEDIADIR_MOVIES}:/data/movies
+      - ${MEDIADIR_MOVIES}:/movies
       - ${MEDIADIR_MUSIC}:/data/music
+      - ${MEDIADIR_MUSIC}:/music
       - ${MEDIADIR_TV}:/data/tv
+      - ${MEDIADIR_TV}:/tv

@@ -1,10 +1,15 @@
-#/APPNICENAME=TTRSS
-#/APPDESCRIPTION=News feed (RSS/Atom) reader and aggregator
+# APPNICENAME=TTRSS
+# APPDESCRIPTION=News feed (RSS/Atom) reader and aggregator
 services:
   ttrss:
-    image: linuxserver/tt-rss
     container_name: ttrss
+    hostname: ${DOCKERHOSTNAME}
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - PGID=${PGID}
       - PUID=${PUID}

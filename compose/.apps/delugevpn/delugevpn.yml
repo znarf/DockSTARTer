@@ -1,11 +1,17 @@
-#/APPNICENAME=DelugeVPN
-#/APPDESCRIPTION=Deluge, OpenVPN and Privoxy
+# APPNICENAME=DelugeVPN
+# APPDESCRIPTION=Deluge, OpenVPN and Privoxy
 services:
   delugevpn:
-    image: binhex/arch-delugevpn
     container_name: delugevpn
+    hostname: ${DOCKERHOSTNAME}
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
+      - ENABLE_PRIVOXY=${DELUGEVPN_ENABLE_PRIVOXY}
       - LAN_NETWORK=${LAN_NETWORK}
       - NAME_SERVERS=${NS1},${NS2}
       - PGID=${PGID}
@@ -21,5 +27,6 @@ services:
       - ${DOCKERCONFDIR}/delugevpn:/config
       - ${DOCKERSHAREDDIR}:/shared
       - ${DOWNLOADSDIR}:/data
+      - ${DOWNLOADSDIR}:/downloads
     cap_add:
       - NET_ADMIN

@@ -1,10 +1,15 @@
-#/APPNICENAME=Monitorr
-#/APPDESCRIPTION=Webfront to live display the status of any webapp or service
+# APPNICENAME=Monitorr
+# APPDESCRIPTION=Webfront to live display the status of any webapp or service
 services:
   monitorr:
-    image: monitorr/monitorr
     container_name: monitorr
+    hostname: ${DOCKERHOSTNAME}
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - PGID=${PGID}
       - PUID=${PUID}

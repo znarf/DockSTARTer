@@ -1,10 +1,15 @@
-#/APPNICENAME=Muximux
-#/APPDESCRIPTION=A lightweight way to manage your HTPC
+# APPNICENAME=Muximux
+# APPDESCRIPTION=A lightweight way to manage your HTPC
 services:
   muximux:
-    image: linuxserver/muximux
     container_name: muximux
+    hostname: ${DOCKERHOSTNAME}
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - PGID=${PGID}
       - PUID=${PUID}

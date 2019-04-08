@@ -10,8 +10,7 @@ menu_value_prompt() {
     CURRENT_VAL=$(run_script 'env_get' "${SET_VAR}")
 
     local DEFAULT_VAL
-    DEFAULT_VAL=$(grep "^${SET_VAR}=" "${SCRIPTPATH}/compose/.env.example" | xargs || true)
-    DEFAULT_VAL="${DEFAULT_VAL#*=}"
+    DEFAULT_VAL=$(grep --color=never -Po "^${SET_VAR}=\K.*" "${SCRIPTPATH}/compose/.env.example" || true)
 
     local SYSTEM_VAL
     local VALUEDESCRIPTION
@@ -24,6 +23,14 @@ menu_value_prompt() {
             SYSTEM_VAL="${DETECTED_HOMEDIR}/.docker/config"
             VALUEOPTIONS+=("Use System " "${SYSTEM_VAL}")
             ;;
+        DOCKERGID)
+            SYSTEM_VAL=$(cut -d: -f3 < <(getent group docker))
+            VALUEOPTIONS+=("Use System " "${SYSTEM_VAL}")
+            ;;
+        DOCKERHOSTNAME)
+            SYSTEM_VAL=${HOSTNAME}
+            VALUEOPTIONS+=("Use System " "${SYSTEM_VAL}")
+            ;;
         DOCKERSHAREDDIR)
             SYSTEM_VAL="${DETECTED_HOMEDIR}/.docker/config/shared"
             VALUEOPTIONS+=("Use System " "${SYSTEM_VAL}")
@@ -32,25 +39,31 @@ menu_value_prompt() {
             SYSTEM_VAL="${DETECTED_HOMEDIR}/Downloads"
             VALUEOPTIONS+=("Use System " "${SYSTEM_VAL}")
             ;;
-        MEDIADIR_BOOKS)
-            SYSTEM_VAL="${DETECTED_HOMEDIR}/Books"
+        LAN_NETWORK)
+            # https://github.com/tom472/mediabox/commit/d6a3317c9513ac9907715c76fb4459cba426da18
+            # https://stackoverflow.com/questions/13322485/how-to-get-the-primary-ip-address-of-the-local-machine-on-linux-and-os-x#comment89955893_25851186
+            SYSTEM_VAL=$(ip a | grep -Po "$(ip route get 1 | sed -n 's/^.*src \([0-9.]*\) .*$/\1/p')\/\d+" | sed 's/[0-9]*\//0\//')
             VALUEOPTIONS+=("Use System " "${SYSTEM_VAL}")
+            ;;
+        MEDIADIR_BOOKS)
+            HOME_VAL="${DETECTED_HOMEDIR}/Books"
+            VALUEOPTIONS+=("Use Home " "${HOME_VAL}")
             ;;
         MEDIADIR_COMICS)
-            SYSTEM_VAL="${DETECTED_HOMEDIR}/Comics"
-            VALUEOPTIONS+=("Use System " "${SYSTEM_VAL}")
+            HOME_VAL="${DETECTED_HOMEDIR}/Comics"
+            VALUEOPTIONS+=("Use Home " "${HOME_VAL}")
             ;;
         MEDIADIR_MOVIES)
-            SYSTEM_VAL="${DETECTED_HOMEDIR}/Movies"
-            VALUEOPTIONS+=("Use System " "${SYSTEM_VAL}")
+            HOME_VAL="${DETECTED_HOMEDIR}/Movies"
+            VALUEOPTIONS+=("Use Home " "${HOME_VAL}")
             ;;
         MEDIADIR_MUSIC)
-            SYSTEM_VAL="${DETECTED_HOMEDIR}/Music"
-            VALUEOPTIONS+=("Use System " "${SYSTEM_VAL}")
+            HOME_VAL="${DETECTED_HOMEDIR}/Music"
+            VALUEOPTIONS+=("Use Home " "${HOME_VAL}")
             ;;
         MEDIADIR_TV)
-            SYSTEM_VAL="${DETECTED_HOMEDIR}/TV"
-            VALUEOPTIONS+=("Use System " "${SYSTEM_VAL}")
+            HOME_VAL="${DETECTED_HOMEDIR}/TV"
+            VALUEOPTIONS+=("Use Home " "${HOME_VAL}")
             ;;
         PGID)
             SYSTEM_VAL="${DETECTED_PGID}"
@@ -128,6 +141,10 @@ menu_value_prompt() {
             ;;
     esac
 
+    if [[ -n ${SYSTEM_VAL:-} ]]; then
+        VALUEDESCRIPTION="\n\n System detected values are recommended.${VALUEDESCRIPTION}"
+    fi
+
     local SELECTEDVALUE
     if [[ ${CI:-} == true ]] && [[ ${TRAVIS:-} == true ]]; then
         SELECTEDVALUE="Keep Current "
@@ -139,6 +156,9 @@ menu_value_prompt() {
     case "${SELECTEDVALUE}" in
         "Keep Current ")
             INPUT=${CURRENT_VAL}
+            ;;
+        "Use Home ")
+            INPUT=${HOME_VAL}
             ;;
         "Use Default ")
             INPUT=${DEFAULT_VAL}
@@ -190,24 +210,13 @@ menu_value_prompt() {
                 fi
                 ;;
             *DIR | *DIR_*)
-                local PUID
-                PUID=$(run_script 'env_get' PUID)
-                local PGID
-                PGID=$(run_script 'env_get' PGID)
                 if [[ ${INPUT} == "/" ]]; then
                     whiptail --fb --clear --title "DockSTARTer" --msgbox "Cannot use / for ${SET_VAR}. Please select another folder." 0 0
                     menu_value_prompt "${SET_VAR}"
                 elif [[ ${INPUT} == ~* ]]; then
                     local CORRECTED_DIR
-                    CORRECTED_DIR="${DETECTED_HOMEDIR}${INPUT/*~/}"
-                    local ANSWER
-                    set +e
-                    ANSWER=$(
-                        whiptail --fb --clear --title "DockSTARTer" --yesno "Cannot use the ~ shortcut in ${SET_VAR}. Would you like to use ${CORRECTED_DIR} instead?." 0 0 3>&1 1>&2 2>&3
-                        echo $?
-                    )
-                    set -e
-                    if [[ ${ANSWER} == 0 ]]; then
+                    CORRECTED_DIR="${DETECTED_HOMEDIR}${INPUT#*~}"
+                    if run_script 'question_prompt' Y "Cannot use the ~ shortcut in ${SET_VAR}. Would you like to use ${CORRECTED_DIR} instead?"; then
                         run_script 'env_set' "${SET_VAR}" "${CORRECTED_DIR}"
                         whiptail --fb --clear --title "DockSTARTer" --msgbox "Returning to the previous menu to confirm selection." 0 0
                     else
@@ -216,27 +225,13 @@ menu_value_prompt() {
                     menu_value_prompt "${SET_VAR}"
                 elif [[ -d ${INPUT} ]]; then
                     run_script 'env_set' "${SET_VAR}" "${INPUT}"
-                    local ANSWER
-                    set +e
-                    ANSWER=$(
-                        whiptail --fb --clear --title "DockSTARTer" --yesno "Would you like to set permissions on ${INPUT} ?" 0 0 3>&1 1>&2 2>&3
-                        echo $?
-                    )
-                    set -e
-                    if [[ ${ANSWER} == 0 ]]; then
-                        run_script 'set_permissions' "${INPUT}" "${PUID}" "${PGID}"
+                    if run_script 'question_prompt' Y "Would you like to set permissions on ${INPUT} ?"; then
+                        run_script 'set_permissions' "${INPUT}"
                     fi
                 else
-                    local ANSWER
-                    set +e
-                    ANSWER=$(
-                        whiptail --fb --clear --title "DockSTARTer" --yesno "${INPUT} is not a valid path. Would you like to attempt to create it?" 0 0 3>&1 1>&2 2>&3
-                        echo $?
-                    )
-                    set -e
-                    if [[ ${ANSWER} == 0 ]]; then
+                    if run_script 'question_prompt' Y "${INPUT} is not a valid path. Would you like to attempt to create it?"; then
                         mkdir -p "${INPUT}" || fatal "${INPUT} folder could not be created."
-                        run_script 'set_permissions' "${INPUT}" "${PUID}" "${PGID}"
+                        run_script 'set_permissions' "${INPUT}"
                         run_script 'env_set' "${SET_VAR}" "${INPUT}"
                         whiptail --fb --clear --title "DockSTARTer" --msgbox "${INPUT} folder was created successfully." 0 0
                     else
@@ -247,14 +242,7 @@ menu_value_prompt() {
                 ;;
             P[GU]ID)
                 if [[ ${INPUT} == "0" ]]; then
-                    local ANSWER
-                    set +e
-                    ANSWER=$(
-                        whiptail --fb --clear --title "DockSTARTer" --yesno "Running as root is not recommended. Would you like to select a different ID?" 0 0 3>&1 1>&2 2>&3
-                        echo $?
-                    )
-                    set -e
-                    if [[ ${ANSWER} == 0 ]]; then
+                    if run_script 'question_prompt' Y "Running as root is not recommended. Would you like to select a different ID?"; then
                         menu_value_prompt "${SET_VAR}"
                     else
                         run_script 'env_set' "${SET_VAR}" "${INPUT}"
@@ -271,4 +259,9 @@ menu_value_prompt() {
                 ;;
         esac
     fi
+}
+
+test_menu_value_prompt() {
+    # run_script 'menu_value_prompt'
+    warning "Travis does not test menu_value_prompt."
 }

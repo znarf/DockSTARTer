@@ -1,3 +1,0 @@
-services:
-  transmission:
-    image: lsioarmhf/transmission

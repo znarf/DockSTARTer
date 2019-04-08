@@ -1,10 +1,15 @@
-#/APPNICENAME=Glances
-#/APPDESCRIPTION=Cross-platform system monitoring tool
+# APPNICENAME=Glances
+# APPDESCRIPTION=Cross-platform system monitoring tool
 services:
   glances:
-    image: nicolargo/glances
     container_name: glances
+    hostname: ${DOCKERHOSTNAME}
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - GLANCES_OPT=-w
       - TZ=${TZ}

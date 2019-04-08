@@ -1,10 +1,15 @@
-#/APPNICENAME=AirdcPP
-#/APPDESCRIPTION=Client for Advanced Direct Connect and Direct Connect networks
+# APPNICENAME=AirdcPP
+# APPDESCRIPTION=Client for Advanced Direct Connect and Direct Connect networks
 services:
   airdcpp:
-    image: gangefors/airdcpp-webclient
     container_name: airdcpp
+    hostname: ${DOCKERHOSTNAME}
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - GID=${PGID}
       - HTTP_PORT=${AIRDCPP_PORT_5600}
@@ -20,3 +25,4 @@ services:
       - ${DOCKERCONFDIR}/airdcpp:/.airdcpp
       - ${DOCKERSHAREDDIR}:/shared
       - ${DOWNLOADSDIR}:/Downloads
+      - ${DOWNLOADSDIR}:/downloads

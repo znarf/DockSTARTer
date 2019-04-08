@@ -1,10 +1,15 @@
-#/APPNICENAME=TransmissionVPN
-#/APPDESCRIPTION=Transmission, WebUI and OpenVPN
+# APPNICENAME=TransmissionVPN
+# APPDESCRIPTION=Transmission, WebUI and OpenVPN
 services:
   transmissionvpn:
-    image: haugene/transmission-openvpn
     container_name: transmissionvpn
+    hostname: ${DOCKERHOSTNAME}
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - LOCAL_NETWORK=${LAN_NETWORK}
       - OPENVPN_OPTS=${VPN_OPTIONS}
